@@ -1,0 +1,196 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+    <%- include('partials/head.ejs') %>
+</head>
+
+<main class="col-md-9 ms-sm-auto col-lg-10 px-md-4">
+
+    <div class="row">
+
+        <div class="col">
+
+            <div class="container text-light">
+                <div class="row space-2" id="booksC">
+
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+    </div>
+    <!-- Modal -->
+    <div class="modal fade" id="edit-book" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="exampleModalLabel">Modal title</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <form action="">
+                        <form id="form">
+                            <input type="text" class="form-control mt-1" placeholder="Book Title" id="Title" required>
+                            <input type="text" class="form-control mt-1" placeholder="Author Name" id="Author" required>
+                            <select name="" id="Genre" class="form-control mt-1">
+                                <option value="Fiction">Fiction</option>
+                                <option value="Non-Fiction">Non-Ficton</option>
+                                <option value="Historical-Fiction">Historical-Fiction</option>
+                            </select>
+                            <br>
+                            <p>Borrowed? <span style="color: red;" id="myDIV">*</span></p>
+                            Yes <input type="radio" name="stat" value="Yes" id="Yes" class="form-check-input"><br>
+                            No <input type="radio" name="stat" value="No" id="No" class="form-check-input"><br>
+                            <br>
+                            <label class="form-label" for="Cover">Book Cover</label>
+                            <input type="file" class="form-control" id="Cover" onchange="getImageURL()">
+                            <input type="number" hidden value="" id="idbook">
+
+                        </form>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                    <button type="button" class="btn btn-primary" onclick="updateB()">Save changes</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</main>
+</div>
+</div>
+
+
+<footer>
+    <%- include('partials/footer.ejs') %>
+</footer>
+<script>
+    window.onload = () => {
+        getBooks();
+
+    }
+    let getBooks = () => {
+        $.ajax({
+            type: "GET",
+            url: "/bookview/listbooks",
+            success: function (books, status) {
+                if (status === 'success') {
+                    displayBooks(books);
+                }
+            }
+        });
+    }
+    let bookcards = ''
+
+    let displayBooks = (books) => {
+        let list = '';
+        if (!books.length) {
+            document.querySelector('#booksC').innerHTML =
+                `<h1 class="text-black text-center">We have no books right now!<br> Try adding some in Add Books</h1>`
+            return
+        }
+        bookcards = ""
+        books.forEach(b => {
+
+            bookcards += `<div class="col-4">
+                    <div class="card border-light  text-dark" style="width: 18rem;margin: 2%;">
+                        <img class="card-img-top rounded" style="max-height:30em;object-fit:cover;" src="data:image/*;base64,${b.Cover}" alt="Card image cap">
+                        <div class="card-body text-center">
+                          <h5 class="card-title">Title: ${b.Title}</h5>
+                          <p class="card-text">Author: ${b.Author}</p>
+                          <p class="card-text">Genre: ${b.Genre}</p>
+                          <a class="btn btn-link-dark m-lg-1" onclick="deleteB(${b.idbook})">Delete</a><a class="btn btn-link-dark" onclick='editBook(${JSON.stringify(b)})'>Edit</a>
+                        </div>
+                      </div>
+                  </div>`
+        });
+        document.querySelector('#booksC').innerHTML = bookcards;
+    }
+
+    let deleteB = (id) => {
+        $.ajax({
+            type: "DELETE",
+            url: `/bookview/delete/${id}`,
+            success: function (data, status) {
+                if (status === 'success') {
+                    getBooks();
+                    window.location.reload();
+                }
+            }
+        });
+    }
+
+    let modal = new bootstrap.Modal(document.querySelector('#edit-book'));
+
+    let editBook = (book) => {
+        document.getElementById("Title").value = book.Title
+        document.getElementById("Author").value = book.Author
+        document.getElementById("idbook").value = book.idbook
+        //Genre
+        modal.show();
+    }
+    let reader = new FileReader()
+    let Cover = ''
+    reader.onload = () => {
+        Cover = reader.result.split(',')[1]
+        console.log(Cover)
+    }
+
+    function getImageURL() {
+        const fileInput = document.getElementById("Cover")
+        reader.readAsDataURL(fileInput.files[0])
+    }
+    let updateB = () => {
+        var status = ""
+        if (document.getElementById("Yes").checked) {
+            status = "Borrowed"
+        } else if (document.getElementById("No").checked) {
+            status = "Free"
+        } else {
+            swal.fire("Please fill in completely")
+            var x = document.getElementById("myDIV");
+            if (x.style.display === "none") {
+                x.style.display = "block";
+            } else {
+                x.style.display = "none";
+            }
+            return
+        }
+
+        if (!document.getElementById("Title").value || !document.getElementById("Author").value || !Cover){
+            return
+        }
+          
+        let book = {
+                Title: document.getElementById("Title").value,
+                Author: document.getElementById("Author").value,
+                Genre: document.getElementById("Genre").value,
+                Status: status,
+                Cover: Cover,
+                idbook: parseInt(document.getElementById("idbook").value)
+            }
+            let id = document.querySelector('#idbook').value;
+            $.ajax({
+                type: "PUT",
+                url: `/bookview/update/${id}`,
+                headers : {
+                    "content-type" : "application/json"
+                },
+                data: JSON.stringify(book),
+                success: function (data, status) {
+                    if (status === 'success') {
+                        getBooks();
+                        modal.hide();
+                    }
+                }
+            });
+    }
+</script>
+</body>
+
+
+</html>

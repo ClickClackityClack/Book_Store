@@ -1,0 +1,205 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+    <%- include('partials/head.ejs') %>
+</head>
+
+<main class="col-md-9 ms-sm-auto col-lg-10 px-md-4">
+    <div class="container mt-5">
+        <h1 class="text-center">Borrow some books!</h1>
+        <form id="form" onsubmit="saveLoan()">
+            <p>Book title</p>
+            <select class="form-select" aria-label="Default select example" id="Book_title">
+              </select>
+              <input type="number" hidden id="loan">
+              <p>Date Loaned</p>
+             <input type="date" class="form-control mt-1" id="Loan_date"> 
+             <p>Date Returned</p>
+             <input type="date" class="form-control mt-1" id="Date_returned">
+            <input type="number" hidden value="0" id="idloans">
+            <button type="submit" class="btn btn-lg btn-warning mt-4 mb-5">Submit</button>
+        </form>
+    </div>
+    <div>
+        <div id="loansC">
+            <table class="table table-hover pb-0 border">
+                <thead class="text-dark">
+                    <tr>
+                        <th scope="col">Book Title</th>
+                        <th scope="col">Loan Number</th>
+                        <th scope="col">Loan Date</th>
+                        <th scope="col">Date Returned</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody class="table-dark" id="loandata">
+
+                </tbody>
+            </table>
+        </div>
+    </div>
+    </div>
+    <!-- Modal -->
+    <div class="modal fade" id="edit-loan" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="exampleModalLabel">Modal title</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <form action="">
+                        <form id="form">
+                            <p>Book title</p>
+                            <select class="form-select" aria-label="Default select example" id="Book_titleU">
+                              </select>
+                              <input type="number" hidden value="" id="Loan_numberU">
+                              <p>Date Loaned</p>
+                             <input type="date" class="form-control mt-1" id="Loan_dateU"> 
+                             <p>Date Returned</p>
+                             <input type="date" class="form-control mt-1" id="Date_returnedU">
+                            <input type="number" hidden value="0" id="idloansU">
+
+                        </form>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                    <button type="button" class="btn btn-primary" onclick="updateL()">Save changes</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</main>
+</div>
+</div>
+
+
+<footer>
+    <%- include('partials/footer.ejs') %>
+</footer>
+<script>
+    window.onload = () => {
+       getLoans();
+       loadTitles();
+    }
+
+    saveLoan = () => {
+        let loan = {
+            Book_title: document.getElementById("Book_title").value,
+            Loan_number: Math.floor(Math.random()*5000),
+            Loan_date: document.getElementById("Loan_date").value,
+            Date_returned: document.getElementById("Date_returned").value,
+            idloans: parseInt(document.getElementById("idloans").value)
+        }
+        getLoans();
+        $.ajax({
+            type: "POST",
+            url: "/loans/add",
+            data: loan,
+            success: function (data, status) {
+                if (status === 'success') {
+                    swal.fire('Saved!');
+                }
+            }
+        });
+        document.getElementById("form").reset();
+    }
+
+    loadTitles = async () => {
+        let res = await fetch('/loans/loadTitles')
+            var books = await res.json()
+            var options = ""
+            books.forEach(book => {
+                options += `<option value="${book.Title}">${book.Title}</option>`
+            });
+            document.getElementById("Book_title").innerHTML = options
+            document.getElementById("Book_titleU").innerHTML = options
+    }
+
+    let getLoans = () => {
+        $.ajax({
+            type: "GET",
+            url: "/loans/displayLoans",
+            success: function (loans, status) {
+                if (status === 'success') {
+                    displayLoans(loans);
+                }
+            }
+        });
+    }
+
+    let displayLoans = (loans) => {
+        let list = '';
+        if (!loans.length) {
+            document.querySelector('#loansC').innerHTML =
+                `<h1 class="text-black text-center font-italic">There are currently no loans, borrow some books!</h1>`
+            return
+        }
+        loans.forEach(l => {
+            list += `<tr>
+                        <td>${l.Book_title}</td>
+                        <td>${l.Loan_number}</td>
+                        <td>${l.Loan_date}</td>
+                        <td>${l.Date_returned}</td>
+                        <td>
+                            <button class="btn btn-danger" onclick="deleteLoan(${l.idloans})">DELETE</button>
+                        <button class="btn btn-success" onclick='editloan(${JSON.stringify(l)})'>EDIT</button>
+                        </td>
+                        </tr>`;
+        });
+        document.querySelector('#loandata').innerHTML = list;
+        
+
+    }
+
+    let deleteLoan = (id) => {
+        $.ajax({
+            type: "DELETE",
+            url: `/loans/delete/${id}`,
+            success: function (data, status) {
+                if (status === 'success') {
+                    getLoans();
+                }
+            }
+        });
+    }
+
+    let modal = new bootstrap.Modal(document.querySelector('#edit-loan'));
+
+    let editloan = (loan) => {
+        document.querySelector('#Book_titleU').value = loan.Book_title;
+        document.querySelector('#Loan_numberU').value = loan.Loan_number;
+        document.querySelector('#Loan_dateU').value = loan.Loan_date;
+        document.querySelector('#Date_returnedU').value = loan.Date_returned;
+        document.querySelector("#idloansU").value = loan.idloans;
+        modal.show();
+    }
+
+    let updateL = () => {
+        let form = {
+            Book_title: document.querySelector('#Book_titleU').value,
+            Loan_number: document.querySelector('#Loan_numberU').value,
+            Loan_date: document.querySelector('#Loan_dateU').value,
+            Date_returned: document.querySelector('#Date_returnedU').value,
+            idloans: document.querySelector('#idloansU').value
+        }
+        let id = document.querySelector('#idloansU').value;
+        $.ajax({
+            type: "PUT",
+            url: `/loans/update/${id}`,
+            data: form,
+            success: function (data, status) {
+                if (status === 'success') {
+                    getLoans();
+                    modal.hide();
+                }
+            }
+        });
+    }
+</script>
+</body>
+
+
+</html>

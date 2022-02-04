@@ -1,0 +1,152 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+    <%- include('partials/head.ejs') %>
+</head>
+
+<main class="col-md-9 ms-sm-auto col-lg-10 px-md-4">
+    <div class="panel panel-default">
+        <div id="customerC">
+            <table class="table table-hover">
+                <thead class="text-dark">
+                    <tr>
+                        <th scope="col">First Name</th>
+                        <th scope="col">Last Name</th>
+                        <th scope="col">Address</th>
+                        <th scope="col">Email</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody class="table-dark" id="customerdata">
+
+                </tbody>
+            </table>
+        </div>
+    </div>
+    </div>
+    <!-- Modal -->
+    <div class="modal fade" id="edit-customer" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="exampleModalLabel">Modal title</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <form action="">
+                        <form id="form">
+                            <input type="text" class="form-control mt-1" placeholder="Name" id="Name" required>
+                            <input type="text" class="form-control mt-1" placeholder="Last Name" id="Lname" required>
+                            <input type="text" class="form-control mt-1" placeholder="Address" id="Address" required>
+                            <input type="email" class="form-control mt-1" placeholder="Email(jim@example.com)"
+                                id="Email" required>
+                            <input type="number" hidden id="idcustomers">
+
+                        </form>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                    <button type="button" class="btn btn-primary" onclick="updateC()">Save changes</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</main>
+</div>
+</div>
+
+
+<footer>
+    <%- include('partials/footer.ejs') %>
+</footer>
+<script>
+    window.onload = () => {
+        getCustomers();
+    }
+
+    let getCustomers = () => {
+        $.ajax({
+            type: "GET",
+            url: "/viewcustomer/listcustomers",
+            success: function (customers, status) {
+                if (status === 'success') {
+                    displayCustomers(customers);
+                }
+            }
+        });
+    }
+
+    let displayCustomers = (customers) => {
+        let list = '';
+        if (!customers.length) {
+            document.querySelector('#customerC').innerHTML =
+                `<h1 class="text-black text-center font-italic">There are currently no customers, please consider joining</h1>`
+            return
+        }
+        customers.forEach(c => {
+            list += `<tr>
+                        <td>${c.Name}</td>
+                        <td>${c.Lname}</td>
+                        <td>${c.Address}</td>
+                        <td>${c.Email}</td>
+                        <td>
+                            <button class="btn btn-danger" onclick="deleteCustomer(${c.idcustomers})">DELETE</button>
+                        <button class="btn btn-success" onclick='editCustomer(${JSON.stringify(c)})'>EDIT</button>
+                        </td>
+                        </tr>`;
+        });
+        document.querySelector('#customerdata').innerHTML = list;
+
+    }
+
+    let deleteCustomer = (id) => {
+        $.ajax({
+            type: "DELETE",
+            url: `/viewcustomer/delete/${id}`,
+            success: function (data, status) {
+                if (status === 'success') {
+                    getCustomers();
+                }
+            }
+        });
+    }
+
+    let modal = new bootstrap.Modal(document.querySelector('#edit-customer'));
+
+    let editCustomer = (customer) => {
+        document.querySelector('#Name').value = customer.Name;
+        document.querySelector('#Lname').value = customer.Lname;
+        document.querySelector('#Address').value = customer.Address;
+        document.querySelector('#Email').value = customer.Email;
+        document.querySelector("#idcustomers").value = customer.idcustomers;
+        modal.show();
+    }
+
+    let updateC = () => {
+        let form = {
+            Name: document.querySelector('#Name').value,
+            Lname: document.querySelector('#Lname').value,
+            Address: document.querySelector('#Address').value,
+            Email: document.querySelector('#Email').value,
+            idcustomers: parseInt(document.querySelector('#idcustomers').value)
+        }
+        let id = document.querySelector('#idcustomers').value;
+        $.ajax({
+            type: "PUT",
+            url: `/viewcustomer/update/${id}`,
+            data: form,
+            success: function (data, status) {
+                if (status === 'success') {
+                    getCustomers();
+                    modal.hide();
+                }
+            }
+        });
+    }
+</script>
+</body>
+
+
+</html>

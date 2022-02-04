@@ -1,0 +1,58 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+    <%- include('partials/head.ejs') %>
+</head>
+
+<body>
+    <main class="col-md-9 ms-sm-auto col-lg-10 px-md-4">
+        <div class="container mt-5">
+            <h1 class="text-center">Join the exclusive book store!</h1>
+            <form id="form" onsubmit="saveCustomer">
+                <input type="text" class="form-control mt-1" placeholder="Name" id="Name" required>
+                <input type="text" class="form-control mt-1" placeholder="Last Name" id="Lname" required>
+                <input type="text" class="form-control mt-1" placeholder="Address" id="Address" required>
+                <input type="email" class="form-control mt-1" placeholder="Email(jim@example.com)" id="Email" required>
+                <input type="number" hidden value="0" id="idcustomers">
+                <button type="submit" class="btn btn-lg btn-warning mt-4">Submit</button>
+            </form>
+        </div>
+        <div class="d-flex justify-content-center mt-5">
+            <img src="/images/Customers.jpg" alt=""></div>
+    </main>
+
+</body>
+<footer>
+    <%- include('partials/footer.ejs') %>
+    <script src="https://smtpjs.com/v3/smtp.js">
+    </script>
+</footer>
+<script>
+    let saveCustomer = () => {
+        let form = {
+            Name: document.getElementById("Name").value,
+            Lname: document.getElementById("Lname").value,
+            Address: document.getElementById("Address").value,
+            Email: document.getElementById("Email").value,
+            idcustomers: parseInt(document.getElementById("idcustomers").value)
+        }
+        $.ajax({
+            type: "POST",
+            url: "/addcustomer/add",
+            data: form,
+            success: function (data, status) {
+                if (status === 'success') {
+                    swal.fire('Saved!');
+                }
+            }
+        });
+    }
+
+
+</script>
+
+
+
+
+</html>

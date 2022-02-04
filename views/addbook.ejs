@@ -1,0 +1,93 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+    <%- include('partials/head.ejs') %>
+</head>
+
+<body>
+    <main class="col-md-9 ms-sm-auto col-lg-10 px-md-4">
+        <div class="container mt-5">
+            <h1 class="text-center">Add Your Favorite Book!</h1>
+            <form id="form" onsubmit="saveBook()">
+                <input type="text" class="form-control mt-1" placeholder="Book Title" id="Title" required>
+                <input type="text" class="form-control mt-1" placeholder="Author Name" id="Author" required>
+                <select name="" id="Genre" class="form-control mt-1">
+                    <option value="Fiction">Fiction</option>
+                    <option value="Non-Fiction">Non-Ficton</option>
+                    <option value="Historical-Fiction">Historical-Fiction</option>
+                </select>
+                <br>
+                <p>Borrowed? <span style="color: red;" id="myDIV">*</span></p>
+                Yes <input type="radio" name="stat" value="Yes" id="Yes" class="form-check-input"><br>
+                No <input type="radio" name="stat" value="No" id="No" class="form-check-input"><br>
+                <br>
+                <label class="form-label" for="Cover">Book Cover</label>
+                <input type="file" class="form-control" id="Cover" onchange="getImageURL()">
+                <input type="number" hidden value="0" id="idbook">
+                <button type="submit" class="btn btn-lg btn-warning mt-4">Submit</button>
+            </form>
+        </div>
+        <div class="d-flex justify-content-center mt-5">
+            <img src="/images/bookclub.png" alt=""></div>
+    </main>
+
+</body>
+<footer>
+    <%- include('partials/footer.ejs') %>
+</footer>
+<script>
+    let reader = new FileReader()
+    let Cover = ''
+    reader.onload = () => {
+        Cover = reader.result.split(',')[1]
+        console.log(Cover)
+    }
+
+    function getImageURL() {
+        const fileInput = document.getElementById("Cover")
+        reader.readAsDataURL(fileInput.files[0])
+    }
+    let saveBook = () => {
+        var status = ""
+        if (document.getElementById("Yes").checked) {
+            status = "Borrowed"
+        } else if (document.getElementById("No").checked) {
+            status = "Free"
+        } else {
+            swal.fire("Please fill in completely")
+            return
+            var x = document.getElementById("myDIV");
+            if (x.style.display === "none") {
+                x.style.display = "block";
+            } else {
+                x.style.display = "none";
+            }
+        }
+        let form = {
+            Title: document.getElementById("Title").value,
+            Author: document.getElementById("Author").value,
+            Genre: document.getElementById("Genre").value,
+            Status: status,
+            Cover: Cover
+        }
+        $.ajax({
+            type: "POST",
+            headers: {
+                "content-type" : "application/json"
+            },
+            url: "/addbook/add",
+            data: JSON.stringify(form),
+            success: function (data, status) {
+                if (status === 'success') {
+                    swal.fire('Saved!');
+                }
+            }
+        });
+    }
+</script>
+
+
+
+
+</html>

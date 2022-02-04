@@ -1,0 +1,94 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+    <%- include('partials/head.ejs') %>
+</head>
+
+<main class="col-md-9 ms-sm-auto col-lg-10 px-md-4">
+    <div
+        class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+        <h1 class="h2">Loan Data</h1>
+        <div class="btn-toolbar mb-2 mb-md-0">
+        </div>
+    </div>
+
+    <canvas class="my-4 w-100" id="myChart" width="900" height="380"></canvas>
+
+    <h2 class="text-center mt-5">Our Newest Books</h2>
+    <div class="container mt-3">
+        <div class="row" id="booksC">
+          </div>
+        </div>
+      </div>
+</main>
+</div>
+</div>
+
+
+<script src="https://code.jquery.com/jquery-3.3.1.slim.min.js"
+    integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo"
+    crossorigin="anonymous"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js"
+    integrity="sha384-UO2eT0CpHqdSJQ6hJty5KVphtPhzWj9WO1clHTMGa3JDZwrnQq4sF86dIHNDz0W1"
+    crossorigin="anonymous"></script>
+<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js"
+    integrity="sha384-JjSmVgyd0p3pXB1rRibZUAYoIIy6OrQ6VrjIEaFf/nJGzIxFDsf4x0xIM+B07jRM"
+    crossorigin="anonymous"></script>
+
+<script src="https://cdn.jsdelivr.net/npm/feather-icons@4.28.0/dist/feather.min.js"
+    integrity="sha384-uO3SXW5IuS1ZpFPKugNNWqTZRRglnUJK6UAZ/gxOX80nxEkN9NcGZTftn6RzhGWE"
+    crossorigin="anonymous"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@2.9.4/dist/Chart.min.js"
+    integrity="sha384-zNy6FEbO50N+Cg5wap8IKA4M/ZnLJgzc6w2NqACZaK0u0FXfOWRRJOnQtpZun8ha"
+    crossorigin="anonymous"></script>
+
+<footer>
+    <%- include('partials/footer.ejs') %>
+</footer>
+<script src="/javascripts/dashboard.js"></script>
+<script>
+    window.onload = () => {
+        getBooks();
+    }
+    let getBooks = () => {
+        $.ajax({
+            type: "GET",
+            url: "/listbooks",
+            success: function (books, status) {
+                if (status === 'success') {
+                    displayBooks(books);
+                }
+            }
+        });
+    }
+    let bookcards = ''
+
+    let displayBooks = (books) => {
+        let list = '';
+        if (!books.length) {
+            document.querySelector('#booksC').innerHTML =
+                `<h1 class="text-black text-center">We have no books right now!<br> Try adding some in Add Books</h1>`
+            return
+        }
+        bookcards = ""
+        books.forEach(b => {
+
+            bookcards += `<div class="col-4">
+                    <div class="card border-light  text-dark" style="width: 10rem;margin: 2%;">
+                        <img class="card-img-top rounded" style="max-height:30em;object-fit:cover;" src="data:image/*;base64,${b.Cover}" alt="Card image cap">
+                        <div class="card-body text-center">
+                          <h5 class="card-title">Title: ${b.Title}</h5>
+                          <p class="card-text">Author: ${b.Author}</p>
+                          <p class="card-text">Genre: ${b.Genre}</p>
+                        </div>
+                      </div>
+                  </div>`
+        });
+        document.querySelector('#booksC').innerHTML = bookcards;
+    }
+</script>
+</body>
+
+
+</html>
